@@ -215,11 +215,11 @@ Ext.extend(Ext.ux.FileUploader, Ext.util.Observable, {
      * Fires event(s) on upload finish/error
      * @private
      */
-    ,fireFinishEvents:function(options) {
-        if(true !== this.eventsSuspended && !this.singleUpload) {
-            this.fireEvent('filefinished', this, options && options.record);
+    ,fireFinishEvents:function(options, response) {
+        if (true !== this.eventsSuspended && !this.singleUpload) {
+            this.fireEvent('filefinished', this, options && options.record, response);
         }
-        if(true !== this.eventsSuspended && 0 === this.upCount) {
+        if (true !== this.eventsSuspended && 0 === this.upCount && !this.itemsForUpload) {  // only fire allfinished event if no upload items remain
             this.stopProgress();
             this.fireEvent('allfinished', this);
         }
@@ -316,15 +316,16 @@ Ext.extend(Ext.ux.FileUploader, Ext.util.Observable, {
         var records;
 
         // singleUpload - all files uploaded in one form
-        if(this.singleUpload) {
+        if (this.singleUpload) {
             // some files may have been successful
-            records = this.store.queryBy(function(r){
+            records = this.store.queryBy(function (r) {
                 var state = r.get('state');
                 return 'done' !== state && 'uploading' !== state;
             });
-            records.each(function(record) {
-                var e = error.errors ? error.errors[record.id] : this.unknownErrorText;
-                if(e) {
+            records.each(function (record) {
+                // Use submitted field name instead of record id
+                var e = error.errors ? error.errors[record.data.input.dom.name] : this.unknownErrorText;
+                if (e) {
                     record.set('state', 'failed');
                     record.set('error', e);
                     Ext.getBody().appendChild(record.get('input'));
@@ -340,13 +341,14 @@ Ext.extend(Ext.ux.FileUploader, Ext.util.Observable, {
         }
         // multipleUpload - each file uploaded in it's own form
         else {
-            if(error && 'object' === Ext.type(error)) {
-                record.set('error', error.errors && error.errors[record.id] ? error.errors[record.id] : this.unknownErrorText);
+            if (error && 'object' === Ext.type(error)) {
+                // Use submitted field name instead of record id
+                record.set('error', error.errors ? error.errors[record.data.input.dom.name] : this.unknownErrorText);
             }
-            else if(error) {
+            else if (error) {
                 record.set('error', error);
             }
-            else if(response && response.responseText) {
+            else if (response && response.responseText) {
                 record.set('error', response.responseText);
             }
             else {
@@ -486,7 +488,7 @@ Ext.extend(Ext.ux.FileUploader, Ext.util.Observable, {
      * and the global stop is initiated
      */
     ,stopUpload:function(record) {
-        // single abord
+        // single abort
         var iframe = false;
         if(record) {
             iframe = this.getIframe(record);
@@ -528,23 +530,29 @@ Ext.extend(Ext.ux.FileUploader, Ext.util.Observable, {
      */
     ,upload:function() {
 
-        var records = this.store.queryBy(function(r){return 'done' !== r.get('state');});
-        if(!records.getCount()) {
+        var records = this.store.queryBy(function (r) { return 'done' !== r.get('state'); });
+        if (!records.getCount()) {
             return;
         }
 
         // fire beforeallstart event
-        if(true !== this.eventsSuspended && false === this.fireEvent('beforeallstart', this)) {
+        if (true !== this.eventsSuspended && false === this.fireEvent('beforeallstart', this)) {
             return;
         }
-        if(this.singleUpload) {
+
+        if (this.singleUpload) {
             this.uploadSingle();
-        }
-        else {
+        } else if (this.concurrent === false) {
+            // Store array of records for concurrent upload
+            this.itemsForUpload = records.items;
+
+            // Begin asynchronous loop of individual file uploads
+            this.uploadFile(this.itemsForUpload[0]);
+        } else {
             records.each(this.uploadFile, this);
         }
 
-        if(true === this.enableProgress) {
+        if (true === this.enableProgress) {
             this.startProgress();
         }
 
@@ -563,17 +571,17 @@ Ext.extend(Ext.ux.FileUploader, Ext.util.Observable, {
         this.form = false;
 
         // process ajax success
-        if(true === success) {
+        if (true === success) {
             try {
                 o = Ext.decode(response.responseText);
             }
-            catch(e) {
+            catch (e) {
                 this.processFailure(options, response, this.jsonErrorText);
-                this.fireFinishEvents(options);
+                this.fireFinishEvents(options, response);
                 return;
             }
             // process command success
-            if(true === o.success) {
+            if (true === o.success) {
                 this.processSuccess(options, response, o);
             }
             // process command failure
@@ -586,7 +594,25 @@ Ext.extend(Ext.ux.FileUploader, Ext.util.Observable, {
             this.processFailure(options, response);
         }
 
-        this.fireFinishEvents(options);
+        // Continue asynchronous upload loop if necessary, otherwise end normally
+        if (!this.singleUpload && this.concurrent === false) {
+            this.itemsForUpload.shift();
+
+            if (this.itemsForUpload.length) {
+                // Call here for proper event sequence filefinished -> beforefilestart
+                this.fireFinishEvents(options, response);
+
+                this.uploadFile(this.itemsForUpload[0]);
+            } else {
+                delete this.itemsForUpload;
+
+                // Call after itemsForUpload has been removed to get allfinished event
+                this.fireFinishEvents(options, response);
+            }
+        } else {
+            // Normal behavior here
+            this.fireFinishEvents(options, response);
+        }
 
     } // eo function uploadCallback
     // }}}
@@ -598,7 +624,7 @@ Ext.extend(Ext.ux.FileUploader, Ext.util.Observable, {
      */
     ,uploadFile:function(record, params) {
         // fire beforestart event
-        if(true !== this.eventsSuspended && false === this.fireEvent('beforefilestart', this, record)) {
+        if (true !== this.eventsSuspended && false === this.fireEvent('beforefilestart', this, record)) {
             return;
         }
 
@@ -607,7 +633,8 @@ Ext.extend(Ext.ux.FileUploader, Ext.util.Observable, {
 
         // append input to the form
         var inp = record.get('input');
-        inp.set({name:inp.id});
+        // Allow setting of attachment field name - only applies to individual upload, not used in uploadSingle method
+        inp.set({ name: this.uploadFieldName || inp.id });
         form.appendChild(inp);
 
         // get params for request
@@ -623,9 +650,6 @@ Ext.extend(Ext.ux.FileUploader, Ext.util.Observable, {
 
         // request upload
         Ext.Ajax.request(o);
-
-        // todo:delete after devel
-        this.getIframe.defer(100, this, [record]);
 
     } // eo function uploadFile
     // }}}

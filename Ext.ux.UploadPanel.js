@@ -184,13 +184,19 @@ Ext.ux.UploadPanel = Ext.extend(Ext.Panel, {
 
         // {{{
         // create buttons
-        // add (file browse button) configuration
+        // add (file upload field) configuration
         var addCfg = {
-             xtype:'browsebutton'
-            ,text:this.addText + '...'
-            ,iconCls:this.addIconCls
-            ,scope:this
-            ,handler:this.onAddFile
+            buttonCfg: {
+                hideLabel: true
+               ,iconCls: this.addIconCls
+            }
+           ,buttonText: this.addText + '...'
+           ,buttonOnly: true // no textfield
+           ,listeners: {
+            fileselected: { fn: this.onAddFile, scope: this }
+           }
+           ,style: { display: 'none'} // IE hack - can't use visibility b/c IE buffers the space
+           ,xtype: 'fileuploadfield'
         };
 
         // upload button configuration
@@ -277,7 +283,7 @@ Ext.ux.UploadPanel = Ext.extend(Ext.Panel, {
                     + '</tpl>'
                     , {scope:this}
                 )
-                ,listeners:{click:{scope:this, fn:this.onViewClick}}
+                ,listeners: { click: { scope: this, fn: this.onViewClick, buffer: 250 } }  // Using buffer to prevent double events
 
             }]
         });
@@ -363,6 +369,8 @@ Ext.ux.UploadPanel = Ext.extend(Ext.Panel, {
         var config = {
              store:this.store
             ,singleUpload:this.singleUpload
+            ,concurrent: this.concurrent           // pass concurrent so value may be set from UploadPanel
+            ,uploadFieldName: this.uploadFieldName // pass uploadFieldName to uploader so field name may be explicitly set
             ,maxFileSize:this.maxFileSize
             ,enableProgress:this.enableProgress
             ,url:this.url
@@ -493,15 +501,17 @@ Ext.ux.UploadPanel = Ext.extend(Ext.Panel, {
     // {{{
     /**
      * called when file is added - adds file to store
+     * uses Ext.ux.FileUploadField to pass file
      * @private
-     * @param {Ext.ux.BrowseButton}
+     * @param {Ext.ux.FileUploadField}
      */
-    ,onAddFile:function(bb) {
-        if(true !== this.eventsSuspended && false === this.fireEvent('beforefileadd', this, bb.getInputFile())) {
+    ,onAddFile: function (fu, fileName) {
+        var inp = fu.fileInput;
+        if (true !== this.eventsSuspended && false === this.fireEvent('beforefileadd', this, inp)) {
             return;
         }
-        var inp = bb.detachInputFile();
-        inp.addClass('x-hidden');
+        fu.detachFileInput();
+
         var fileName = this.getFileName(inp);
 
         // create new record and add it to store
@@ -736,6 +746,7 @@ Ext.ux.UploadPanel = Ext.extend(Ext.Panel, {
     ,syncShadow:function() {
         if(this.contextmenu && this.contextmenu.shadow) {
             this.contextmenu.getEl().shadow.show(this.contextmenu.getEl());
+            this.ownerCt.doLayout();    // needed for FileUploadField
         }
     } // eo function syncShadow
     // }}}
