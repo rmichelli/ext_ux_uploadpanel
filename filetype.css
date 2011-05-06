@@ -95,12 +95,14 @@
     background-image: url(../images/mime/exec_wine.png) ! important;
 }
  .file-doc
+,.file-docx
 ,.file-odt
 ,.file-rtf
 {
     background-image: url(../images/mime/wordprocessing.png) ! important;
 }
  .file-xls
+,.file-xlsx
 ,.file-ods
 ,.file-xlc
 ,.file-xll
@@ -138,6 +140,7 @@
     background-image: url(../images/mime/zip.png) ! important;
 }
  .file-ppt
+,.file-pptx
 ,.file-odp
 ,.file-ppz
 ,.file-ppt
