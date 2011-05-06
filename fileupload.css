@@ -1,0 +1,120 @@
+
+.icon-plus {
+    background-image:url(../images/add.png) ! important;
+}
+
+.icon-cross {
+    background-image:url(../images/cross.png) ! important;
+}
+
+.icon-minus {
+    background-image:url(../images/delete.png) ! important;
+}
+
+.icon-stop {
+    background-image:url(../images/control_stop.png) ! important;
+}
+
+.icon-upload {
+    background-image:url(../images/up.png) ! important;
+}
+
+.icon-working {
+    background-image:url(../images/default/grid/wait.gif) ! important;
+}
+
+.icon-arrow-down {
+    background-image:url(../images/arrow_down.png) ! important;
+}
+
+.icon-collapse {
+    background-image:url(../images/collapse-all.gif) ! important;
+}
+
+.icon-expand {
+    background-image:url(../images/expand-all.gif) ! important;
+}
+
+.icon-arrow-right {
+    background-image:url(../images/arrow_right.png) ! important;
+}
+
+.icon-refresh {
+    background-image:url(../images/arrow_refresh.png) ! important;
+}
+
+.icon-pencil {
+    background-image:url(../images/pencil.png) ! important;
+}
+
+.icon-download {
+    background-image:url(../images/page_white_put.png) ! important;
+}
+
+.icon-folder {
+    background-image:url(../images/default/tree/folder.gif) ! important;
+}
+
+
+.ux-up-item {
+    line-height:17px;
+    height:17px;
+    cursor:default;
+/*    border: 1px solid transparent; */
+    margin-bottom:1px;
+    position:relative;
+    background-color:#e0e0e0;
+    background-image:url(../images/white_bg.png) ! important;
+    background-repeat:no-repeat
+}
+.ux-up-icon-file {
+    width:16px;
+    height:16px;
+    vertical-align:-3px;
+    margin-right:4px;
+    background-image:url(../images/default/tree/leaf.gif) ! important;
+    float:left;
+}
+.ux-up-item-selected {
+    /*
+    border-color:#c0c0c0;
+    background-color:#f0f0f0;
+    */
+}
+.ux-up-indicator {
+    background-color:yellow;
+    height:17px;
+    width:40px;
+    position:absolute;
+    opacity:0.4;
+}
+.ux-up-icon-state {
+    width:16px;
+    float:right;
+    margin-right:2px;
+    cursor:pointer;
+    z-index:-1;
+}
+.ux-up-icon-queued {
+    background-image:url(../images/page_white_get.png) ! important;
+}
+.ux-up-icon-uploading {
+    background-image:url(../images/default/grid/wait.gif) ! important;
+}
+.ux-up-icon-done {
+    background-image:url(../images/accept.png) ! important;
+}
+.ux-up-icon-failed {
+    background-image:url(../images/error.png) ! important;
+}
+.ux-up-icon-stopped {
+    background-image:url(../images/stop.png) ! important;
+}
+.ux-up-text {
+    float:left;
+}
+.ux-ftm-nodename {
+    color:black;
+    font-weight:bold;
+    cursor:default ! important;
+}
