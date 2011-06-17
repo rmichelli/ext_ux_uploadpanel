@@ -3,7 +3,7 @@
  * Ext.ux.form.UploadPanel
  *
  * @author  Ing. Jozef Sakáloš
- * @version $Id: Ext.ux.UploadPanel.js 310 2008-08-14 17:23:48Z jozo $
+ * @version $Id: Ext.ux.UploadPanel.js 310 2008-08-14 17:23:48Z jozo $ - modified
  * @date    13. March 2008
  *
  * @license Ext.ux.form.UploadPanel is licensed under the terms of
@@ -535,7 +535,7 @@ Ext.ux.UploadPanel = Ext.extend(Ext.Panel, {
             this.fireEvent('fileadd', this, this.store, rec);
         }
 
-        this.doLayout();
+        this.ownerCt.doLayout();
 
     } // eo onAddFile
     // }}}
@@ -633,6 +633,8 @@ Ext.ux.UploadPanel = Ext.extend(Ext.Panel, {
             this.fireEvent('fileremove', this, this.store);
             this.syncShadow();
         }
+
+        this.ownerCt.doLayout();
     } // eo function onRemoveFile
     // }}}
     // {{{
@@ -746,7 +748,6 @@ Ext.ux.UploadPanel = Ext.extend(Ext.Panel, {
     ,syncShadow:function() {
         if(this.contextmenu && this.contextmenu.shadow) {
             this.contextmenu.getEl().shadow.show(this.contextmenu.getEl());
-            this.ownerCt.doLayout();    // needed for FileUploadField
         }
     } // eo function syncShadow
     // }}}

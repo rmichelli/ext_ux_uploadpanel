@@ -1,78 +1,70 @@
 /*!
-* Ext JS Library 3.0.2
-* Copyright(c) 2006-2009 Ext JS, LLC
-* licensing@extjs.com
-* http://www.extjs.com/license
-* Code has been modified from original found at: http://www.sencha.com/forum/showthread.php?83978
-*/
+ * Ext JS Library 3.3.3
+ * Copyright(c) 2006-2011 Sencha Inc.
+ * licensing@sencha.com
+ * http://www.sencha.com/license
+ * Code has been modified original file from ext-3.3.3\examples\ux\fileuploadfield\FileUploadField.js
+ */
 
 Ext.ns('Ext.ux.form');
 
 /**
-* @class Ext.ux.form.FileUploadField
-* @extends Ext.form.TextField
-* Creates a file upload field.
-* @xtype fileuploadfield
-*/
-Ext.ux.form.FileUploadField = Ext.extend(Ext.form.TextField, {
+ * @class Ext.ux.form.FileUploadField
+ * @extends Ext.form.TextField
+ * Creates a file upload field.
+ * @xtype fileuploadfield
+ */
+Ext.ux.form.FileUploadField = Ext.extend(Ext.form.TextField,  {
     /**
-    * @cfg {String} buttonText The button text to display on the upload button (defaults to
-    * 'Browse...').  Note that if you supply a value for {@link #buttonCfg}, the buttonCfg.text
-    * value will be used instead if available.
-    */
+     * @cfg {String} buttonText The button text to display on the upload button (defaults to
+     * 'Browse...').  Note that if you supply a value for {@link #buttonCfg}, the buttonCfg.text
+     * value will be used instead if available.
+     */
     buttonText: 'Browse...',
     /**
-    * @cfg {Boolean} buttonOnly True to display the file upload field as a button with no visible
-    * text field (defaults to false).  If true, all inherited TextField members will still be available.
-    */
+     * @cfg {Boolean} buttonOnly True to display the file upload field as a button with no visible
+     * text field (defaults to false).  If true, all inherited TextField members will still be available.
+     */
     buttonOnly: false,
     /**
-    * @cfg {Number} buttonOffset The number of pixels of space reserved between the button and the text field
-    * (defaults to 3).  Note that this only applies if {@link #buttonOnly} = false.
-    */
+     * @cfg {Number} buttonOffset The number of pixels of space reserved between the button and the text field
+     * (defaults to 3).  Note that this only applies if {@link #buttonOnly} = false.
+     */
     buttonOffset: 3,
     /**
-    * @cfg {Object} buttonCfg A standard {@link Ext.Button} config object.
-    */
+     * @cfg {Object} buttonCfg A standard {@link Ext.Button} config object.
+     */
 
     // private
     readOnly: true,
 
     /**
-    * @hide
-    * @method autoSize
-    */
+     * @hide
+     * @method autoSize
+     */
     autoSize: Ext.emptyFn,
 
     // private
-    initComponent: function () {
+    initComponent: function(){
         Ext.ux.form.FileUploadField.superclass.initComponent.call(this);
 
         this.addEvents(
-        /**
-        * @event fileselected
-        * Fires when the underlying file input field's value has changed from the user
-        * selecting a new file from the system file selection dialog.
-        * @param {Ext.ux.form.FileUploadField} this
-        * @param {String} value The file value returned by the underlying file input field
-        */
+            /**
+             * @event fileselected
+             * Fires when the underlying file input field's value has changed from the user
+             * selecting a new file from the system file selection dialog.
+             * @param {Ext.ux.form.FileUploadField} this
+             * @param {String} value The file value returned by the underlying file input field
+             */
             'fileselected'
         );
     },
 
     // private
-    onRender: function (ct, position) {
+    onRender : function(ct, position){
         Ext.ux.form.FileUploadField.superclass.onRender.call(this, ct, position);
 
-        this.wrap = this.el.wrap({ cls: 'x-form-field-wrap x-form-file-wrap' });
-
-        // This causes odd button appearance, not sure of it's intent, removing...
-//      this.wrap.on({
-//          'mousemove': this.onButtonMouseMove,
-//          'mouseover': this.onButtonMouseMove,
-//          scope: this
-//      });
-
+        this.wrap = this.el.wrap({cls:'x-form-field-wrap x-form-file-wrap'});
         this.el.addClass('x-form-file-text');
         this.el.dom.removeAttribute('name');
 
@@ -80,25 +72,16 @@ Ext.ux.form.FileUploadField = Ext.extend(Ext.form.TextField, {
         var btnCfg = Ext.applyIf(this.buttonCfg || {}, {
             text: this.buttonText
         });
-        // Override button template to get consistent button appearance if a icon is used
-        // This template explicitly adds style elements which should be applied by x-btn-text but are missing or ignored (cross browser issue)
-        if (btnCfg.iconCls) {
-            btnCfg.template = new Ext.Template(
-                '<table border="0" cellpadding="0" cellspacing="0" class="x-btn-wrap"><tbody><tr>',
-                '<td class="x-btn-left"><i>&#160;</i></td><td class="x-btn-center"><em unselectable="on"><button class="x-btn-text" type="{1}" style="background-position: 0pt 2px; background-repeat: no-repeat; padding: 3px 0pt 2px 18px;">{0}</button></em></td><td class="x-btn-right"><i>&#160;</i></td>',
-                "</tr></tbody></table>"
-            );
-        }
 
         this.button = new Ext.Button(Ext.apply(btnCfg, {
             renderTo: this.wrap,
             cls: 'x-form-file-btn'  // http://www.extjs.com/forum/showthread.php?t=82344
         }));
 
-        // Moved this here to guarantee the button has already been instantiated, this calls adds any tooltip and calls bindListeners.
+        // Moved this here to guarantee the button has already been instantiated, this call adds any tooltip and calls bindListeners
         this.createFileInput();
 
-        if (this.buttonOnly) {
+        if(this.buttonOnly){
             this.el.hide();
             this.wrap.setWidth(this.button.getEl().getWidth());
         }
@@ -106,24 +89,24 @@ Ext.ux.form.FileUploadField = Ext.extend(Ext.form.TextField, {
         this.resizeEl = this.positionEl = this.wrap;
     },
 
-    bindListeners: function () {
+    bindListeners: function(){
         this.fileInput.on({
             scope: this,
             // Only IE supports mouseenter, replaced with mouseover
-            mouseover: function () {
-                this.button.addClass(['x-btn-over', 'x-btn-focus']);
+            mouseover: function() {
+                this.button.addClass(['x-btn-over','x-btn-focus']);
             },
             // Only IE supports mouseleave, replaced with mouseout
-            mouseout: function () {
-                this.button.removeClass(['x-btn-over', 'x-btn-focus', 'x-btn-click']);
+            mouseout: function(){
+                this.button.removeClass(['x-btn-over','x-btn-focus','x-btn-click']);
             },
-            mousedown: function () {
+            mousedown: function(){
                 this.button.addClass('x-btn-click');
             },
-            mouseup: function () {
-                this.button.removeClass(['x-btn-over', 'x-btn-focus', 'x-btn-click']);
+            mouseup: function(){
+                this.button.removeClass(['x-btn-over','x-btn-focus','x-btn-click']);
             },
-            change: function () {
+            change: function(){
                 var v = this.fileInput.dom.value;
                 this.setValue(v);
                 this.fireEvent('fileselected', this, v);
@@ -131,15 +114,16 @@ Ext.ux.form.FileUploadField = Ext.extend(Ext.form.TextField, {
         });
     },
 
-    createFileInput: function () {
+    createFileInput : function() {
         this.fileInput = this.wrap.createChild({
-            name: this.name || this.getId(),
+            name: this.name||this.getId(),
             cls: 'x-form-file',
             tag: 'input',
             type: 'file',
             size: 1
         });
 
+        // create tooltip if requested (does not happen automatically)
         if (this.button.tooltip) {
             if (Ext.isObject(this.button.tooltip)) {
                 Ext.QuickTips.register(Ext.apply({
@@ -152,72 +136,62 @@ Ext.ux.form.FileUploadField = Ext.extend(Ext.form.TextField, {
         this.bindListeners();
     },
 
-    reset: function () {
-        this.fileInput.remove();
-        this.createFileInput();
-        this.bindListeners();
+    reset : function(){
+        if (this.rendered) {
+            this.fileInput.remove();
+            this.createFileInput();
+            this.bindListeners();
+        }
         Ext.ux.form.FileUploadField.superclass.reset.call(this);
     },
 
     // private
-    getFileInputId: function () {
+    getFileInputId: function(){
         return this.id + '-file';
     },
 
     // private
-    onResize: function (w, h) {
+    onResize : function(w, h){
         Ext.ux.form.FileUploadField.superclass.onResize.call(this, w, h);
 
         this.wrap.setWidth(w);
 
-        if (!this.buttonOnly) {
-            this.el.setWidth(this.wrap.getWidth() - this.button.getEl().getWidth() - this.buttonOffset);
+        if(!this.buttonOnly){
+            w = this.wrap.getWidth() - this.button.getEl().getWidth() - this.buttonOffset;
+            this.el.setWidth(w);
         }
     },
 
     // private
-    onDestroy: function () {
+    onDestroy: function(){
         Ext.ux.form.FileUploadField.superclass.onDestroy.call(this);
         Ext.destroy(this.fileInput, this.button, this.wrap);
     },
 
-    onDisable: function () {
+    onDisable: function(){
         Ext.ux.form.FileUploadField.superclass.onDisable.call(this);
         this.doDisable(true);
     },
 
-    onEnable: function () {
+    onEnable: function(){
         Ext.ux.form.FileUploadField.superclass.onEnable.call(this);
         this.doDisable(false);
 
     },
 
     // private
-    doDisable: function (disabled) {
+    doDisable: function(disabled){
         this.fileInput.dom.disabled = disabled;
         this.button.setDisabled(disabled);
     },
 
-    // private
-    preFocus: Ext.emptyFn,
 
     // private
-    alignErrorIcon: function () {
+    preFocus : Ext.emptyFn,
+
+    // private
+    alignErrorIcon : function(){
         this.errorIcon.alignTo(this.wrap, 'tl-tr', [2, 0]);
-    },
-
-    /**
-    * Handler when the cursor moves over the wrap.
-    * The fileInput gets positioned to guarantee the cursor is over the "Browse" button.
-    * @param {Event} e mouse event.
-    * @private
-    */
-    onButtonMouseMove: function (e) {
-        var right = this.wrap.getRight() - e.getPageX() - 10;
-        var top = e.getPageY() - this.wrap.getY() - 10;
-        this.fileInput.setRight(right);
-        this.fileInput.setTop(top);
-        this.button.addClass(['x-btn-over', 'x-btn-focus']);
     },
 
     /**

@@ -3,7 +3,7 @@
  * Ext.ux.FileUploader
  *
  * @author  Ing. Jozef Sakáloš
- * @version $Id: Ext.ux.FileUploader.js 302 2008-08-03 20:57:33Z jozo $
+ * @version $Id: Ext.ux.FileUploader.js 302 2008-08-03 20:57:33Z jozo $ - modified
  * @date    15. March 2008
  *
  * @license Ext.ux.FileUploader is licensed under the terms of
