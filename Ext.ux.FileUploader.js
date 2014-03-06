@@ -78,7 +78,7 @@ Ext.extend(Ext.ux.FileUploader, Ext.util.Observable, {
     /**
      * @cfg {Object} baseParams baseParams are sent to server in each request.
      */
-     baseParams:{cmd:'upload',dir:'.'}
+     baseParams:{}
 
     /**
      * @cfg {Boolean} concurrent true to start all requests upon upload start, false to start

@@ -45,7 +45,7 @@ Ext.ux.UploadPanel = Ext.extend(Ext.Panel, {
     ,bodyStyle:'padding:2px'
 
     /**
-     * @cfg {String} buttonsAt Where buttons are placed. Valid values are tbar, bbar, body (defaults to 'tbar')
+     * @cfg {String} buttonsAt Where buttons are placed. Valid values are tbar or bbar (defaults to 'tbar')
      */
     ,buttonsAt:'tbar'
 
@@ -58,6 +58,11 @@ Ext.ux.UploadPanel = Ext.extend(Ext.Panel, {
      * @cfg {String} clickStopText
      */
     ,clickStopText:'Click to stop'
+
+    /**
+     * @cfg {Array} customFields Additional fields for file record
+     * Custom fields are set with setCustomFields
+     */
 
     /**
      * @cfg {String} emptyText empty text for dataview
@@ -117,7 +122,12 @@ Ext.ux.UploadPanel = Ext.extend(Ext.Panel, {
     ,maxLength:18
 
     /**
-     * @cfg {String} removeAllIconCls iconClass to use for Remove All button (defaults to 'icon-cross'
+     * @cfg {Boolean} preventDuplicates true to prevent adding files with the same name as a file already in the queue (default is true)
+     */
+    ,preventDuplicates:true
+
+    /**
+     * @cfg {String} removeAllIconCls iconClass to use for Remove All button (defaults to 'icon-cross')
      */
     ,removeAllIconCls:'icon-cross'
 
@@ -140,6 +150,13 @@ Ext.ux.UploadPanel = Ext.extend(Ext.Panel, {
      * @cfg {String} selectedClass class for selected item of DataView
      */
     ,selectedClass:'ux-up-item-selected'
+
+    /**
+     * @cfg {function} function called on file record creation, override as necessary to set values for custom fields
+     * Arguments passed are fileInput and original record data object
+     * Function should return an object with the desired record data
+     */
+    ,setCustomFields: function (inp, data) { return data; }
 
     /**
      * @cfg {Boolean} singleUpload true to upload files in one form, false to upload one by one
@@ -197,6 +214,7 @@ Ext.ux.UploadPanel = Ext.extend(Ext.Panel, {
            }
            ,style: { display: 'none'} // IE hack - can't use visibility b/c IE buffers the space
            ,xtype: 'fileuploadfield'
+           ,ref: '../addBtn'
         };
 
         // upload button configuration
@@ -207,6 +225,7 @@ Ext.ux.UploadPanel = Ext.extend(Ext.Panel, {
             ,scope:this
             ,handler:this.onUpload
             ,disabled:true
+            ,ref:'../uploadBtn'
         };
 
         // remove all button configuration
@@ -217,12 +236,11 @@ Ext.ux.UploadPanel = Ext.extend(Ext.Panel, {
             ,scope:this
             ,handler:this.onRemoveAllClick
             ,disabled:true
+            ,ref: '../removeAllBtn'
         };
 
-        // todo: either to cancel buttons in body or implement it
-        if('body' !== this.buttonsAt) {
-            this[this.buttonsAt] = [addCfg, upCfg, '->', removeAllCfg];
-        }
+        this[this.buttonsAt] = [addCfg, upCfg, '->', removeAllCfg];
+
         // }}}
         // {{{
         // create store
@@ -249,9 +267,9 @@ Ext.ux.UploadPanel = Ext.extend(Ext.Panel, {
             ,{name:'pctComplete', type:'int', system:true}
         ];
 
-        // add custom fields if passed
+        // add custom fields if customFields is an Array
         if(Ext.isArray(this.customFields)) {
-            fields.push(this.customFields);
+            fields = fields.concat(this.customFields);
         }
 
         // create store
@@ -410,12 +428,6 @@ Ext.ux.UploadPanel = Ext.extend(Ext.Panel, {
     ,onRender:function() {
         // call parent
         Ext.ux.UploadPanel.superclass.onRender.apply(this, arguments);
-
-        // save useful references
-        var tb = 'tbar' === this.buttonsAt ? this.getTopToolbar() : this.getBottomToolbar();
-        this.addBtn = Ext.getCmp(tb.items.first().id);
-        this.uploadBtn = Ext.getCmp(tb.items.itemAt(1).id);
-        this.removeAllBtn = Ext.getCmp(tb.items.last().id);
     } // eo function onRender
     // }}}
 
@@ -436,7 +448,7 @@ Ext.ux.UploadPanel = Ext.extend(Ext.Panel, {
 
             case 'uploading':
                 qtip = String.format(this.fileUploadingText, values.fileName);
-                qtip += '<br>' + values.pctComplete + '% done';
+                qtip += (this.enableProgress ? '<br>' + values.pctComplete + '% done' : '');
                 qtip += '<br>' + this.clickStopText;
             break;
 
@@ -507,22 +519,52 @@ Ext.ux.UploadPanel = Ext.extend(Ext.Panel, {
      */
     ,onAddFile: function (fu, fileName) {
         var inp = fu.fileInput;
+
+        fileName = this.getFileName(inp);
+
+        if (this.preventDuplicates !== false && this.store.find('fileName', fileName) !== -1) {
+            var alertTitle = 'File present', alertMsg = 'A file with the same name is<br />already in the upload list.';
+
+            // If this upload panel is part of menu or window, manage alert zIndex and prevent hide on click
+            if (this.ownerCt && this.ownerCt.zIndex) {
+                // Set up beforehide listener to keep ownerCt visible until msg box is removed
+                var returnFalse = function () { return false; };
+
+                this.ownerCt.on('beforehide', returnFalse, this.ownerCt);
+
+                Ext.MessageBox.alert(alertTitle, alertMsg, function () {
+                    this.ownerCt.un('beforehide', returnFalse, this.ownerCt);
+                }, this);
+
+                // Move alert on top of ownerCt
+                Ext.MessageBox.getDialog().setZIndex(this.ownerCt.zIndex + 10);
+            } else {
+                Ext.MessageBox.alert(alertTitle, alertMsg);
+            }
+
+            return;
+        }
         if (true !== this.eventsSuspended && false === this.fireEvent('beforefileadd', this, inp)) {
             return;
         }
         fu.detachFileInput();
 
-        var fileName = this.getFileName(inp);
+        fileName = this.getFileName(inp);
 
         // create new record and add it to store
-        var rec = new this.store.recordType({
+        var values = {
              input:inp
             ,fileName:fileName
             ,filePath:this.getFilePath(inp)
             ,shortName: Ext.util.Format.ellipsis(fileName, this.maxLength)
             ,fileCls:this.getFileCls(fileName)
             ,state:'queued'
-        }, inp.id);
+        };
+
+        this.setCustomFields(inp, values);
+
+        var rec = new this.store.recordType(values, inp.id);
+
         rec.commit();
         this.store.add(rec);
 

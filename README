@@ -2,6 +2,3 @@ Ext.ux.UploadPanel
 
 Original code for Ext.ux.FileUploader.js and Ext.ux.UploadPanel.js from http://filetree.extjs.eu/
 Original code for FileUploadField.js from http://www.sencha.com/forum/showthread.php?83978
-
-master branch is current 3.3.3 version
-extjs-2-2 branch is last working 2.2 version
